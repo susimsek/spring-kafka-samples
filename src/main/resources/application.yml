@@ -1,0 +1,15 @@
+server:
+  port: 8076
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    bindings:
+      customer:
+        topic: "customer"
+        group: "customer-group"
+    retries:
+      customer:
+        maxRetryAttempts: 3
+        exponentialBackoffMultiplier: 2
+        waitDuration: 5000
+        autoCreateTopics: true
