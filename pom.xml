@@ -13,6 +13,20 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>spring-kafka-samples</name>
     <description>spring-kafka-samples</description>
+    <url>https://github.com/susimsek/spring-kafka-samples/</url>
+
+    <developers>
+        <developer>
+            <name>Şuayb Şimşek</name>
+            <email>suaybsimsek58@gmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/susimsek/spring-kafka-samples.git</url>
+        <connection>scm:git:https://github.com/susimsek/spring-kafka-samples.git</connection>
+        <tag>HEAD</tag>
+    </scm>
     <properties>
         <java.version>17</java.version>
         <kotlin.version>1.9.20</kotlin.version>
