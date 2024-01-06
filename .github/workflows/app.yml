@@ -18,6 +18,9 @@ jobs:
         working-directory: ${{ github.workspace }}
     env:
       SPRING_OUTPUT_ANSI_ENABLED: DETECT
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - uses: snyk/actions/setup@master
