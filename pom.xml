@@ -141,7 +141,7 @@
                         </platforms>
                     </from>
                     <to>
-                        <image>suayb/${project.artifactId}:s17</image>
+                        <image>suayb/${project.artifactId}:1.0.0</image>
                     </to>
                 </configuration>
             </plugin>
