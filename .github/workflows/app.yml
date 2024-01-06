@@ -1,4 +1,4 @@
-name: Account Test, Sonar and build.
+name: Spring Kafka samples Test, Sonar and build.
 
 on:
   workflow_dispatch:
