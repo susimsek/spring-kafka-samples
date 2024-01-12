@@ -1,17 +1,15 @@
 package io.github.susimsek.springkafkasamples.service;
 
-import static java.util.Arrays.asList;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.decorators.Decorators;
+import io.github.susimsek.springkafkasamples.exception.TimeoutException;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
@@ -21,17 +19,18 @@ import org.springframework.web.client.HttpServerErrorException;
 @Slf4j
 public class BackendService {
 
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
+    private final CircuitBreakerFactory circuitBreakerFactory;
 
     public String failure(
         boolean failureSwitchEnabled,
-        boolean slowCallSwitchEnabled) {
+        boolean slowCallSwitchEnabled)  {
         if (slowCallSwitchEnabled) {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
-                log.error("InterruptedException: {}", e.getMessage());
+                Thread.currentThread().interrupt();
             }
+            throw new TimeoutException("process failed because connection failed.");
         }
         if (failureSwitchEnabled) {
             throw new HttpServerErrorException(
@@ -42,8 +41,8 @@ public class BackendService {
     public String doSomething(
         boolean failureSwitchEnabled,
         boolean slowCallSwitchEnabled,
-        String userId) {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+        String companyId) {
+        var circuitBreakerConfig = CircuitBreakerConfig.custom()
             .slidingWindowSize(10)
             .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
             .failureRateThreshold(50)
@@ -54,22 +53,21 @@ public class BackendService {
             .waitDurationInOpenState(Duration.ofSeconds(5))
             .slowCallDurationThreshold(Duration.ofSeconds(3))
             .recordExceptions(
+                CallNotPermittedException.class,
                 HttpServerErrorException.class,
                 TimeoutException.class,
                 IOException.class)
             .build();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry
-            .circuitBreaker(String.format("%s-backendService", userId),
-                circuitBreakerConfig);
+        var circuitBreakerId = String.format("%s-backendService", companyId);
         Supplier<String> supplier= () -> failure(failureSwitchEnabled, slowCallSwitchEnabled);
-        Supplier<String> decoratedSupplier= Decorators
-            .ofSupplier(supplier)
-            .withCircuitBreaker(circuitBreaker)
-            .withFallback(asList(TimeoutException.class,
-                    HttpServerErrorException.class),
-                this::fallback)
-            .decorate();
-        return decoratedSupplier.get();
+        circuitBreakerFactory
+            .configureDefault(id -> new Resilience4JConfigBuilder(circuitBreakerId)
+                .circuitBreakerConfig(circuitBreakerConfig)
+                .build());
+       return
+           circuitBreakerFactory
+           .create(circuitBreakerId)
+           .run(supplier, this::fallback);
     }
 
     public String fallback(Throwable ex) {

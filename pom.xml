@@ -33,7 +33,6 @@
         <maven.version>3.2.5</maven.version>
         <spring-cloud.version>2023.0.0</spring-cloud.version>
         <springdoc.version>2.3.0</springdoc.version>
-        <resilience4j.version>2.2.0</resilience4j.version>
         <jib-maven-plugin.version>3.3.2</jib-maven-plugin.version>
         <jib-maven-plugin.architecture>amd64</jib-maven-plugin.architecture>
         <jib.from.image>eclipse-temurin:17-jre-focal</jib.from.image>
@@ -78,12 +77,8 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-spring-boot3</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-all</artifactId>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>

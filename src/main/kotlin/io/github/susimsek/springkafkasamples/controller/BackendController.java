@@ -27,8 +27,8 @@ public class BackendController {
         @Parameter(description = "slow call switch enabled", example = "false")
         @RequestParam(defaultValue = "false") boolean slowCallSwitchEnabled,
         @Parameter(description = "user unique identifier", example = "test1")
-        @RequestParam(defaultValue = "test1") String userId){
+        @RequestParam(defaultValue = "test1") String companyId){
         return backendService.doSomething(
-            failureSwitchEnabled, slowCallSwitchEnabled, userId);
+            failureSwitchEnabled, slowCallSwitchEnabled, companyId);
     }
 }
