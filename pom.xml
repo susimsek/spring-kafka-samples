@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.1</version>
+        <version>3.2.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>io.github.susimsek</groupId>
@@ -29,11 +29,11 @@
     </scm>
     <properties>
         <java.version>17</java.version>
-        <kotlin.version>1.9.20</kotlin.version>
+        <kotlin.version>1.9.22</kotlin.version>
         <maven.version>3.2.5</maven.version>
         <spring-cloud.version>2023.0.0</spring-cloud.version>
         <springdoc.version>2.3.0</springdoc.version>
-        <jib-maven-plugin.version>3.3.2</jib-maven-plugin.version>
+        <jib-maven-plugin.version>3.4.0</jib-maven-plugin.version>
         <jib-maven-plugin.architecture>amd64</jib-maven-plugin.architecture>
         <jib.from.image>eclipse-temurin:17-jre-focal</jib.from.image>
         <checkstyle.version>10.12.5</checkstyle.version>
@@ -43,8 +43,8 @@
         <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
         <sonar-maven-plugin.version>3.10.0.2594</sonar-maven-plugin.version>
         <properties-maven-plugin.version>1.2.1</properties-maven-plugin.version>
-        <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.2.3</maven-failsafe-plugin.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <detekt.configFile>${project.basedir}/detekt-config.yml</detekt.configFile>
         <detekt.xmlReportFile>${project.build.directory}/detekt-reports/detekt.xml</detekt.xmlReportFile>

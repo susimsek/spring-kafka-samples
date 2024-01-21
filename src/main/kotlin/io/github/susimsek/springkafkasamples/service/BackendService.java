@@ -64,8 +64,7 @@ public class BackendService {
             .configureDefault(id -> new Resilience4JConfigBuilder(circuitBreakerId)
                 .circuitBreakerConfig(circuitBreakerConfig)
                 .build());
-       return
-           circuitBreakerFactory
+       return circuitBreakerFactory
            .create(circuitBreakerId)
            .run(supplier, this::fallback);
     }
