@@ -2,6 +2,8 @@ server:
   port: 8076
   forward-headers-strategy: framework
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: spring-kafka-samples
   kafka:
@@ -48,3 +50,9 @@ springdoc:
   show-actuator: true
   cache:
     disabled: true
+
+logging:
+  level:
+    ROOT: DEBUG
+    org.hibernate.SQL: DEBUG
+    io.github.susimsek.springkafkasamples: DEBUG

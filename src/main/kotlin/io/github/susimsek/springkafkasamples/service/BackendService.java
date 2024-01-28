@@ -2,6 +2,7 @@ package io.github.susimsek.springkafkasamples.service;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.susimsek.springkafkasamples.annotation.CircuitBreaker;
 import io.github.susimsek.springkafkasamples.exception.TimeoutException;
 import java.io.IOException;
 import java.time.Duration;
@@ -38,6 +39,8 @@ public class BackendService {
         }
         return "Hello World from backend";
     }
+
+    @CircuitBreaker
     public String doSomething(
         boolean failureSwitchEnabled,
         boolean slowCallSwitchEnabled,
