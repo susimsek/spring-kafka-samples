@@ -34,6 +34,9 @@ public class CustomCircuitBreakerAspect {
     public Object circuitBreakerAroundAdvice(ProceedingJoinPoint joinPoint,
                                              CircuitBreaker circuitBreakerAnnotation,
                                              boolean failureSwitchEnabled) throws Throwable {
+        if (!failureSwitchEnabled) {
+            return joinPoint.proceed();
+        }
         Logger log = logger(joinPoint);
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
