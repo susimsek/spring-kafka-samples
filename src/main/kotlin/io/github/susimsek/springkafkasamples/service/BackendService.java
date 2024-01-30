@@ -2,12 +2,12 @@ package io.github.susimsek.springkafkasamples.service;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.susimsek.springkafkasamples.annotation.CircuitBreaker;
-import io.github.susimsek.springkafkasamples.exception.TimeoutException;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
@@ -31,7 +31,7 @@ public class BackendService {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            throw new TimeoutException("process failed because connection failed.");
+            return "slow Hello World from backend";
         }
         if (failureSwitchEnabled) {
             throw new HttpServerErrorException(
@@ -53,26 +53,31 @@ public class BackendService {
             .minimumNumberOfCalls(5)
             .permittedNumberOfCallsInHalfOpenState(3)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
-            .waitDurationInOpenState(Duration.ofSeconds(5))
+            .waitDurationInOpenState(Duration.ofSeconds(60))
             .slowCallDurationThreshold(Duration.ofSeconds(3))
-            .recordExceptions(
-                CallNotPermittedException.class,
-                HttpServerErrorException.class,
-                TimeoutException.class,
-                IOException.class)
+            .ignoreExceptions(Exception.class)
+            .build();
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
+            .cancelRunningFuture(true)
+            .timeoutDuration(Duration.ofSeconds(50))
             .build();
         var circuitBreakerId = String.format("%s-backendService", companyId);
         Supplier<String> supplier= () -> failure(failureSwitchEnabled, slowCallSwitchEnabled);
         circuitBreakerFactory
             .configureDefault(id -> new Resilience4JConfigBuilder(circuitBreakerId)
                 .circuitBreakerConfig(circuitBreakerConfig)
+                .timeLimiterConfig(timeLimiterConfig)
                 .build());
        return circuitBreakerFactory
            .create(circuitBreakerId)
            .run(supplier, this::fallback);
     }
 
+    @SneakyThrows
     public String fallback(Throwable ex) {
-        return "Recovered: " + ex.toString();
+        if (ex instanceof CallNotPermittedException) {
+            return "Recovered: " + ex;
+        }
+        throw ex;
     }
 }

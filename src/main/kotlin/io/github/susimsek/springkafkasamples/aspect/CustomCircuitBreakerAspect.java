@@ -34,7 +34,7 @@ public class CustomCircuitBreakerAspect {
     public Object circuitBreakerAroundAdvice(ProceedingJoinPoint joinPoint,
                                              CircuitBreaker circuitBreakerAnnotation,
                                              boolean failureSwitchEnabled) throws Throwable {
-        if (!failureSwitchEnabled) {
+        if (true) {
             return joinPoint.proceed();
         }
         Logger log = logger(joinPoint);
