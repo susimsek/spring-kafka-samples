@@ -55,7 +55,7 @@ public class BackendService {
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .waitDurationInOpenState(Duration.ofSeconds(60))
             .slowCallDurationThreshold(Duration.ofSeconds(3))
-            .ignoreExceptions(Exception.class)
+            .ignoreExceptions(Throwable.class)
             .build();
         TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
             .cancelRunningFuture(true)
