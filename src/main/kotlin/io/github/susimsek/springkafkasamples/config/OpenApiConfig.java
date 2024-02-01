@@ -17,14 +17,14 @@ public class OpenApiConfig {
     @Bean
     @Profile("!prod")
     public GroupedOpenApi actuatorApi(
-        OpenApiCustomizer actuatorOpenApiCustomiser,
+        OpenApiCustomizer actuatorOpenApiCustomizer,
         OperationCustomizer actuatorCustomizer,
         WebEndpointProperties endpointProperties,
         @Value("${springdoc.version}") String appVersion){
         return GroupedOpenApi.builder()
             .group("actuator")
             .pathsToMatch(endpointProperties.getBasePath() + ALL_PATTERN)
-            .addOpenApiCustomizer(actuatorOpenApiCustomiser)
+            .addOpenApiCustomizer(actuatorOpenApiCustomizer)
             .addOperationCustomizer(actuatorCustomizer)
             .pathsToExclude("/health/*")
             .addOpenApiCustomizer(openApi -> openApi.info(new io.swagger.v3.oas.models.info.Info()
@@ -48,6 +48,15 @@ public class OpenApiConfig {
             .addOpenApiCustomizer(openApi -> openApi.info(new io.swagger.v3.oas.models.info.Info()
                 .title(" Kafka Demo API").version(appVersion)))
             .pathsToMatch("/api/v1/kafka/**")
+            .build();
+    }
+
+    @Bean
+    public GroupedOpenApi hateoas(@Value("${springdoc.version}") String appVersion) {
+        return GroupedOpenApi.builder().group("hateoas")
+            .addOpenApiCustomizer(openApi -> openApi.info(new io.swagger.v3.oas.models.info.Info()
+                .title(" Hateoas Demo API").version(appVersion)))
+            .pathsToMatch("/api/v1/hateoas/**")
             .build();
     }
 }

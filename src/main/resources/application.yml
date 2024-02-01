@@ -6,6 +6,8 @@ spring:
     allow-bean-definition-overriding: true
   application:
     name: spring-kafka-samples
+  hateoas:
+    use-hal-as-default-json-media-type: false
   kafka:
     bootstrap-servers: localhost:9092
     bindings:
