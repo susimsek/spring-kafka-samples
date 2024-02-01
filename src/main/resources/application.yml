@@ -52,9 +52,3 @@ springdoc:
   show-actuator: true
   cache:
     disabled: true
-
-logging:
-  level:
-    ROOT: DEBUG
-    org.hibernate.SQL: DEBUG
-    io.github.susimsek.springkafkasamples: DEBUG
