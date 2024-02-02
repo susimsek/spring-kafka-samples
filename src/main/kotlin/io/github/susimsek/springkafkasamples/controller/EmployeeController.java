@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
@@ -38,7 +37,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class EmployeeController {
 
     private final EmployeeModelAssembler employeeModelAssembler;
-    private final PagedResourcesAssembler<EmployeeEntity> pagedResourcesAssembler;
     private final EmployeeMapper employeeMapper;
 
     @Operation(
@@ -75,7 +73,7 @@ public class EmployeeController {
         var entities = new PageImpl(employeeList, pageable, employeeList.size());
 
         var pagedModel =
-            pagedResourcesAssembler .toModel(entities, employeeModelAssembler);
+            employeeModelAssembler .toPagedModel(entities);
 
         return ResponseEntity.ok(pagedModel);
     }
