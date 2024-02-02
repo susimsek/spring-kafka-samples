@@ -1,8 +1,5 @@
 package io.github.susimsek.springkafkasamples.controller;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
 import io.github.susimsek.springkafkasamples.assembler.EmployeeModelAssembler;
 import io.github.susimsek.springkafkasamples.dto.EmployeeDTO;
 import io.github.susimsek.springkafkasamples.entity.EmployeeEntity;
@@ -17,6 +14,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -49,12 +47,7 @@ public class EmployeeController {
             var entity = employeeMapper.toEntity(employee);
            var employeeResource = employeeModelAssembler.toModel(entity);
             return ResponseEntity
-                .created(new URI(
-                    linkTo(
-                        methodOn(EmployeeController.class)
-                            .findOne(entity.getId()))
-                        .withSelfRel().getHref()
-                ))
+                .created(new URI(employeeResource.getRequiredLink(IanaLinkRelations.SELF).getHref()))
                 .body(employeeResource);
         }
         catch (URISyntaxException e) {
