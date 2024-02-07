@@ -88,6 +88,10 @@ public class BackendService {
 
     @CircuitBreaker("ALL_POSTS")
     public List<PostDTO> getPosts( boolean failureSwitchEnabled){
+        if (failureSwitchEnabled) {
+            throw new HttpServerErrorException(
+                HttpStatus.INTERNAL_SERVER_ERROR, "This is a remote exception");
+        }
         return jsonPlaceHolderClient.getPosts();
     }
 }

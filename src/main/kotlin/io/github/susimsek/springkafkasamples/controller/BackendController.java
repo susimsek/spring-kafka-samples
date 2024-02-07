@@ -35,8 +35,8 @@ public class BackendController {
     }
 
     @GetMapping("/posts")
-    public List<PostDTO> getPosts( @Parameter(description = "failure switch enabled", example = "true")
-                                       @RequestParam(defaultValue = "true") boolean failureSwitchEnabled){
+    public List<PostDTO> getPosts( @Parameter(description = "failure switch enabled", example = "false")
+                                       @RequestParam(defaultValue = "false") boolean failureSwitchEnabled){
         return backendService. getPosts(failureSwitchEnabled);
     }
 }
