@@ -1,8 +1,10 @@
 package io.github.susimsek.springkafkasamples.controller;
 
+import io.github.susimsek.springkafkasamples.dto.PostDTO;
 import io.github.susimsek.springkafkasamples.service.BackendService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,5 +32,10 @@ public class BackendController {
         @RequestParam(defaultValue = "test1") String companyId){
         return backendService. doSomething(
             failureSwitchEnabled, slowCallSwitchEnabled, companyId);
+    }
+
+    @GetMapping("/posts")
+    public List<PostDTO> getPosts(){
+        return backendService. getPosts();
     }
 }

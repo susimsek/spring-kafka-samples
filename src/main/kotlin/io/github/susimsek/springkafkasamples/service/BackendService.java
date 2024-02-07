@@ -4,7 +4,11 @@ import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.susimsek.springkafkasamples.annotation.CircuitBreaker;
+import io.github.susimsek.springkafkasamples.client.JSONPlaceHolderClient;
+import io.github.susimsek.springkafkasamples.dto.PostDTO;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -21,6 +25,7 @@ import org.springframework.web.client.HttpServerErrorException;
 public class BackendService {
 
     private final CircuitBreakerFactory circuitBreakerFactory;
+    private final JSONPlaceHolderClient jsonPlaceHolderClient;
 
     public String failure(
         boolean failureSwitchEnabled,
@@ -77,6 +82,43 @@ public class BackendService {
     public String fallback(Throwable ex) {
         if (ex instanceof CallNotPermittedException) {
             return "Recovered: " + ex;
+        }
+        throw ex;
+    }
+
+    public List<PostDTO> getPosts(){
+        var circuitBreakerConfig = CircuitBreakerConfig.custom()
+            .slidingWindowSize(10)
+            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+            .failureRateThreshold(50)
+            .slowCallRateThreshold(100)
+            .minimumNumberOfCalls(5)
+            .permittedNumberOfCallsInHalfOpenState(3)
+            .automaticTransitionFromOpenToHalfOpenEnabled(true)
+            .waitDurationInOpenState(Duration.ofSeconds(60))
+            .slowCallDurationThreshold(Duration.ofSeconds(3))
+            .ignoreExceptions(Throwable.class)
+            .build();
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
+            .cancelRunningFuture(true)
+            .timeoutDuration(Duration.ofSeconds(50))
+            .build();
+        var circuitBreakerId = String.format("posts-service");
+        Supplier<List<PostDTO> > supplier= () ->  jsonPlaceHolderClient.getPosts();
+        circuitBreakerFactory
+            .configureDefault(id -> new Resilience4JConfigBuilder(circuitBreakerId)
+                .circuitBreakerConfig(circuitBreakerConfig)
+                .timeLimiterConfig(timeLimiterConfig)
+                .build());
+        return circuitBreakerFactory
+            .create(circuitBreakerId)
+            .run(supplier, this::fallbackPosts);
+    }
+
+    @SneakyThrows
+    public List<PostDTO> fallbackPosts(Throwable ex) {
+        if (ex instanceof CallNotPermittedException) {
+          return Collections.EMPTY_LIST;
         }
         throw ex;
     }
