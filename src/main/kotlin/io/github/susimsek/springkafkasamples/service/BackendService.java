@@ -86,6 +86,7 @@ public class BackendService {
         throw ex;
     }
 
+    @CircuitBreaker
     public List<PostDTO> getPosts(){
         var circuitBreakerConfig = CircuitBreakerConfig.custom()
             .slidingWindowSize(10)
@@ -96,14 +97,14 @@ public class BackendService {
             .permittedNumberOfCallsInHalfOpenState(3)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .waitDurationInOpenState(Duration.ofSeconds(60))
-            .slowCallDurationThreshold(Duration.ofSeconds(3))
+            .slowCallDurationThreshold(Duration.ofMillis(2))
             .ignoreExceptions(Throwable.class)
             .build();
         TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
             .cancelRunningFuture(true)
             .timeoutDuration(Duration.ofSeconds(50))
             .build();
-        var circuitBreakerId = String.format("posts-service");
+        var circuitBreakerId = "posts-service";
         Supplier<List<PostDTO> > supplier= () ->  jsonPlaceHolderClient.getPosts();
         circuitBreakerFactory
             .configureDefault(id -> new Resilience4JConfigBuilder(circuitBreakerId)
