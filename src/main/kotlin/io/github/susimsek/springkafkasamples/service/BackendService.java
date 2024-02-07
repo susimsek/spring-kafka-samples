@@ -7,7 +7,6 @@ import io.github.susimsek.springkafkasamples.annotation.CircuitBreaker;
 import io.github.susimsek.springkafkasamples.client.JSONPlaceHolderClient;
 import io.github.susimsek.springkafkasamples.dto.PostDTO;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
@@ -86,41 +85,9 @@ public class BackendService {
         throw ex;
     }
 
-    @CircuitBreaker
-    public List<PostDTO> getPosts(){
-        var circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .slidingWindowSize(10)
-            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-            .failureRateThreshold(50)
-            .slowCallRateThreshold(100)
-            .minimumNumberOfCalls(5)
-            .permittedNumberOfCallsInHalfOpenState(3)
-            .automaticTransitionFromOpenToHalfOpenEnabled(true)
-            .waitDurationInOpenState(Duration.ofSeconds(60))
-            .slowCallDurationThreshold(Duration.ofMillis(2))
-            .ignoreExceptions(Throwable.class)
-            .build();
-        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
-            .cancelRunningFuture(true)
-            .timeoutDuration(Duration.ofSeconds(50))
-            .build();
-        var circuitBreakerId = "posts-service";
-        Supplier<List<PostDTO> > supplier= () ->  jsonPlaceHolderClient.getPosts();
-        circuitBreakerFactory
-            .configureDefault(id -> new Resilience4JConfigBuilder(circuitBreakerId)
-                .circuitBreakerConfig(circuitBreakerConfig)
-                .timeLimiterConfig(timeLimiterConfig)
-                .build());
-        return circuitBreakerFactory
-            .create(circuitBreakerId)
-            .run(supplier, this::fallbackPosts);
-    }
 
-    @SneakyThrows
-    public List<PostDTO> fallbackPosts(Throwable ex) {
-        if (ex instanceof CallNotPermittedException) {
-          return Collections.EMPTY_LIST;
-        }
-        throw ex;
+    @CircuitBreaker("ALL_POSTS")
+    public List<PostDTO> getPosts( boolean failureSwitchEnabled){
+        return jsonPlaceHolderClient.getPosts();
     }
 }

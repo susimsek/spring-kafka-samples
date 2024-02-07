@@ -1,21 +1,29 @@
 package io.github.susimsek.springkafkasamples.aspect;
 
+import static io.github.susimsek.springkafkasamples.util.SupplierUtil.rethrowSupplier;
+
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.susimsek.springkafkasamples.annotation.CircuitBreaker;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import org.aspectj.lang.JoinPoint;
+import java.time.Duration;
+import java.util.function.Supplier;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class CustomCircuitBreakerAspect {
+
+    private final CircuitBreakerFactory circuitBreakerFactory;
 
     @Pointcut(
         value = "@annotation(circuitBreaker)",
@@ -24,36 +32,45 @@ public class CustomCircuitBreakerAspect {
         // Method is empty as this is just a Pointcut, the implementations are in the advices.
     }
 
-    private Logger logger(JoinPoint joinPoint) {
-        return LoggerFactory.getLogger(joinPoint.getSignature().getDeclaringTypeName());
-    }
-
     @Around(
         value = "matchAnnotatedMethod(circuitBreakerAnnotation) && args(failureSwitchEnabled,..)",
         argNames = "joinPoint,circuitBreakerAnnotation,failureSwitchEnabled")
     public Object circuitBreakerAroundAdvice(ProceedingJoinPoint joinPoint,
                                              CircuitBreaker circuitBreakerAnnotation,
-                                             boolean failureSwitchEnabled) throws Throwable {
-        if (true) {
-            return joinPoint.proceed();
-        }
-        Logger log = logger(joinPoint);
-        Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
-        String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (log.isDebugEnabled()) {
-            log.debug("Enter: {}() with argument[s] = {}", joinPoint.getSignature().getName(),
-                Arrays.toString(joinPoint.getArgs()));
-        }
-        try {
-            Object result = joinPoint.proceed();
-            if (log.isDebugEnabled()) {
-                log.debug("Exit: {}() with result = {}", joinPoint.getSignature().getName(), result);
-            }
-            return result;
-        } catch (IllegalArgumentException e) {
-            log.error("Illegal argument: {} in {}()", Arrays.toString(joinPoint.getArgs()),
-                joinPoint.getSignature().getName());
-            throw e;
-        }
+                                             boolean failureSwitchEnabled) {
+        var circuitBreakerConfig = CircuitBreakerConfig.custom()
+            .slidingWindowSize(10)
+            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+            .failureRateThreshold(50)
+            .slowCallRateThreshold(100)
+            .minimumNumberOfCalls(5)
+            .permittedNumberOfCallsInHalfOpenState(3)
+            .automaticTransitionFromOpenToHalfOpenEnabled(true)
+            .waitDurationInOpenState(Duration.ofSeconds(60))
+            .slowCallDurationThreshold(Duration.ofMillis(2))
+            .ignoreExceptions(Throwable.class)
+            .build();
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
+            .cancelRunningFuture(true)
+            .timeoutDuration(Duration.ofSeconds(50))
+            .build();
+        Supplier<Object> supplier= rethrowSupplier(joinPoint::proceed);
+        circuitBreakerFactory
+            .configureDefault(id -> new Resilience4JConfigBuilder(circuitBreakerAnnotation.value())
+                .circuitBreakerConfig(circuitBreakerConfig)
+                .timeLimiterConfig(timeLimiterConfig)
+                .build());
+        return circuitBreakerFactory
+            .create(circuitBreakerAnnotation.value())
+            .run(supplier, this::fallback);
     }
+
+    @SneakyThrows
+    public String fallback(Throwable ex) {
+        if (ex instanceof CallNotPermittedException) {
+            return "Recovered: " + ex;
+        }
+        throw ex;
+    }
+
 }
